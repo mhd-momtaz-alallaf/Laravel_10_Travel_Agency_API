@@ -12,12 +12,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tours', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('travel_id')->constrained('travels');
+            $table->uuid('id')->primary();
+            $table->uuid('travel_id'); // Define the UUID for travel_id
             $table->string('name');
             $table->date('starting_date');
             $table->date('ending_date');
             $table->integer('price');
+
+            // Add the foreign key constraint
+            $table->foreign('travel_id')
+                  ->references('id')
+                  ->on('travels');
+
             $table->timestamps();
         });
     }

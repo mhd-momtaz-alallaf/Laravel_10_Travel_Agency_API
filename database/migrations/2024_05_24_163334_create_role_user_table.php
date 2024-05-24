@@ -12,8 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('role_user', function (Blueprint $table) { // the migration of the pivot table between roles and users should be written in lowercase alfabet order exactly like this (create_role_user_table).
-            $table->foreignId('role_id')->constrained();
-            $table->foreignId('user_id')->constrained();
+            $table->uuid('role_id');
+            $table->uuid('user_id');
+
+            $table->foreign('role_id')->references('id')->on('roles');
+            $table->foreign('user_id')->references('id')->on('users');
+
+            $table->primary(['role_id', 'user_id']);
         });
     }
 

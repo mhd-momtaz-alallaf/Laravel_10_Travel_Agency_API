@@ -12,14 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('travels', function (Blueprint $table) { // the travel is irregular word (it doesn't accept the plural form), so we will modify the table name from 'travel' to 'travels' and the migration name as well, and we have to specify the table name in the Travel model.
-            $table->id();
-
+            $table->uuid('id')->primary();
             $table->boolean('is_public')->default(false);
             $table->string('slug')->unique();
             $table->string('name');
             $table->text('description');
             $table->unsignedInteger('number_of_days');
-            
             $table->timestamps();
         });
     }
