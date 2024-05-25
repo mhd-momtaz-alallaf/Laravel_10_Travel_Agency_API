@@ -221,4 +221,15 @@ class TourListTest extends TestCase
         $response->assertJsonMissing(['id'=> $earlierTour->id]);  // assert the earlier tour is Not there because its have the starting_date from now() and its out of the filter range.  
         $response->assertJsonFragment(['id'=> $laterTour->id]);  // assert the later tour there because its have the starting_date from now(+2 days) and its within the filter.
     }
+
+    public function test_tours_list_returns_validation_errors(): void
+    {
+        $travel = Travel::factory()->create(); // create 1 travel.
+
+        $response = $this->getJson('/api/v1/travels/'. $travel->slug .'/tours?dateFrom=wrongDateFormat'); // navigate to tours route with date filter have a wrong date format.
+        $response->assertStatus(422); // assert having validation error response (422).
+
+        $response = $this->getJson('/api/v1/travels/'. $travel->slug .'/tours?priceFrom=wrongPriceFormat'); // navigate to tours route with price filter have a wrong price format(string).
+        $response->assertStatus(422); // assert having validation error response (422).
+    }
 }
