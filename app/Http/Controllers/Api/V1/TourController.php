@@ -24,7 +24,10 @@ class TourController extends Controller
             ->when($request->dateTo, function ($query) use ($request) { // to filter by dateTo route optional parameter.
                 $query->where('starting_date', '<=', $request->dateTo);
             })
-            ->orderBy('starting_date')
+            ->when($request->sortBy && $request->sortOrder, function ($query) use ($request) { // to sort the results by sortBy parameter and the parameter sortOrder to specify the sort order (desc, asc).
+                $query->orderBy($request->sortBy, $request->sortOrder);
+            })
+            ->orderBy('starting_date') // we have now orderBy two fields, the fixed one is the 'starting_date', the optional one is the 'price' that coming from the route filtering parameter.
             ->paginate();
 
         return TourResource::collection($tours);
