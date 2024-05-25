@@ -109,4 +109,59 @@ class TourListTest extends TestCase
         $response->assertJsonPath('data.1.id', $cheapLaterTour->id);  // secondly the cheaper but have later date.  
         $response->assertJsonPath('data.2.id', $expensiveTour->id);  // in the last the most expensive in price.
     }
+
+    public function test_tours_list_filters_by_price_correctly(): void
+    {
+        $travel = Travel::factory()->create(); // create 1 travel.
+
+        $expensiveTour = Tour::factory()->create([ // create 1 tour have expensive price = 200.
+            'travel_id' => $travel->id,
+            'price' => 200,
+        ]);
+
+        $cheapTour = Tour::factory()->create([ // create 1 tour have cheap price = 100.
+            'travel_id' => $travel->id,
+            'price'=> 100,
+        ]);
+
+        $endpoint = '/api/v1/travels/'. $travel->slug .'/tours'; // create a general endpoint to use it in a deferent cases.
+
+        $response = $this->get($endpoint .'?priceFrom=100'); // case 1
+
+        $response->assertJsonCount(2, 'data'); // assert we have 2 records.
+        $response->assertJsonFragment(['id'=> $cheapTour->id]);  // assert the cheap tour is there because its have the price 100 and its within the filter.  
+        $response->assertJsonFragment(['id'=> $expensiveTour->id]);  // assert the expensive tour there because its have the price 200 and its within the filter.
+        //-----------------------------------------------------------------------------
+        $response = $this->get($endpoint .'?priceFrom=150'); // case 2
+
+        $response->assertJsonCount(1, 'data'); // assert we have only 1 record.
+        $response->assertJsonMissing(['id'=> $cheapTour->id]);  // assert the cheap tour is Not there because its have the price 100 and its out of the filter range.  
+        $response->assertJsonFragment(['id'=> $expensiveTour->id]);  // assert the expensive tour there because its have the price 200 and its within the filter.
+        //-----------------------------------------------------------------------------
+        $response = $this->get($endpoint .'?priceFrom=250'); // case 3
+
+        $response->assertJsonCount(0, 'data'); // assert we have No records at all because its out of the filter range.
+        //-----------------------------------------------------------------------------
+        $response = $this->get($endpoint .'?priceTo=200'); // case 4
+
+        $response->assertJsonCount(2, 'data'); // assert we have 2 records.
+        $response->assertJsonFragment(['id'=> $cheapTour->id]);  // assert the cheap tour is there because its have the price 100 and its within the filter.  
+        $response->assertJsonFragment(['id'=> $expensiveTour->id]);  // assert the expensive tour there because its have the price 200 and its within the filter.
+        //-----------------------------------------------------------------------------
+        $response = $this->get($endpoint .'?priceTo=150'); // case 5
+
+        $response->assertJsonCount(1, 'data'); // assert we have only 1 record.
+        $response->assertJsonFragment(['id'=> $cheapTour->id]);  // assert the cheap tour is there because its have the price 100 and its within the filter.  
+        $response->assertJsonMissing(['id'=> $expensiveTour->id]);  // assert the expensive tour is Not there because its have the price 200 and its out of the filter range.
+        //-----------------------------------------------------------------------------
+        $response = $this->get($endpoint .'?priceTo=50'); // case 6
+
+        $response->assertJsonCount(0, 'data'); // assert we have No records at all because its out of the filter range.
+        //-----------------------------------------------------------------------------
+        $response = $this->get($endpoint .'?priceFrom=150&priceTo=250'); // case 7
+
+        $response->assertJsonCount(1, 'data'); // assert we have only 1 record.
+        $response->assertJsonMissing(['id'=> $cheapTour->id]);  // assert the cheap tour is Not there because its have the price 100 and its out of the filter range.  
+        $response->assertJsonFragment(['id'=> $expensiveTour->id]);  // assert the expensive tour there because its have the price 200 and its within the filter.
+    }
 }
