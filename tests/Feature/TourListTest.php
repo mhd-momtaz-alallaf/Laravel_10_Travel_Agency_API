@@ -12,7 +12,7 @@ class TourListTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_tour_list_by_travel_slug_returns_correct_tours(): void
+    public function test_tours_list_by_travel_slug_returns_correct_tours(): void
     {
 
         $travel = Travel::factory()->create(); // create 1 travel.
@@ -26,7 +26,7 @@ class TourListTest extends TestCase
         $response->assertJsonFragment(['id'=> $tour->id]); // to see if the id of that tour is exist.
     }
 
-    public function test_tour_price_is_shown_correctly(): void
+    public function test_tours_price_is_shown_correctly(): void
     {
 
         $travel = Travel::factory()->create(); // create 1 travel.
@@ -40,6 +40,20 @@ class TourListTest extends TestCase
 
         $response->assertStatus(200); // assert getting data from the route (the route is exist and correct).
         $response->assertJsonCount(1, 'data'); // assert have only one record.
-        $response->assertJsonFragment(['price'=> 123.45]); // to see if the price of that tour is correct.
+        $response->assertJsonFragment(['price'=> '123.45']); // to see if the price of that tour is correct.
+    }
+
+    public function test_tours_list_returns_pagination(): void
+    {
+
+        $travel = Travel::factory()->create(); // create 1 travel.
+
+        $tour = Tour::factory(16)->create(['travel_id' => $travel->id]); // create 16 tour associated with above travel.
+
+        $response = $this->get('/api/v1/travels/'. $travel->slug .'/tours'); // navigate to the tour route.
+
+        $response->assertStatus(200); // assert getting data from the route (the route is exist and correct).
+        $response->assertJsonCount(15, 'data'); // assert having 15 records in the 'data' key by the pagination.
+        $response->assertJsonPath('meta.last_page', 2); // assert the path of the last page of pagination coming from the meta key is 2 because we have only tow pages for this tour.
     }
 }
