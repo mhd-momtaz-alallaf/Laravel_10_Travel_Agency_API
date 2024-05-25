@@ -164,4 +164,61 @@ class TourListTest extends TestCase
         $response->assertJsonMissing(['id'=> $cheapTour->id]);  // assert the cheap tour is Not there because its have the price 100 and its out of the filter range.  
         $response->assertJsonFragment(['id'=> $expensiveTour->id]);  // assert the expensive tour there because its have the price 200 and its within the filter.
     }
+
+    public function test_tours_list_filters_by_starting_date_correctly(): void
+    {
+        $travel = Travel::factory()->create(); // create 1 travel.
+
+        $laterTour = Tour::factory()->create([ // create 1 tour have starting date is later because it starts after tow days from now.
+            'travel_id' => $travel->id,
+            'starting_date' => now()->addDays(2),
+            'ending_date' => now()->addDays(3),
+        ]);
+
+        $earlierTour = Tour::factory()->create([ // create 1 tour have starting date is earlier because it starts now.
+            'travel_id' => $travel->id,
+            'starting_date' => now(),
+            'ending_date' => now()->addDays(1),
+        ]);
+
+        $endpoint = '/api/v1/travels/'. $travel->slug .'/tours'; // create a general endpoint to use it in a deferent cases.
+
+        $response = $this->get($endpoint .'?dateFrom='.now()); // case 1
+
+        $response->assertJsonCount(2, 'data'); // assert we have 2 records.
+        $response->assertJsonFragment(['id'=> $earlierTour->id]);  // assert the earlier tour is there because its have the starting_date from now() and its within the filter.  
+        $response->assertJsonFragment(['id'=> $laterTour->id]);  // assert the later tour there because its have the starting_date from now(+2 days) and its within the filter.
+        //-----------------------------------------------------------------------------
+        $response = $this->get($endpoint .'?dateFrom='.now()->addDay()); // case 2
+
+        $response->assertJsonCount(1, 'data'); // assert we have only 1 record.
+        $response->assertJsonMissing(['id'=> $earlierTour->id]);  // assert the earlier tour is Not there because its have the starting_date from now() and its out of the filter range.  
+        $response->assertJsonFragment(['id'=> $laterTour->id]);  // assert the later tour there because its have the starting_date from now(+2 days) and its within the filter.
+        //-----------------------------------------------------------------------------
+        $response = $this->get($endpoint .'?dateFrom='.now()->addDays(5)); // case 3
+
+        $response->assertJsonCount(0, 'data'); // assert we have No records at all because its out of the filter range.
+        //-----------------------------------------------------------------------------
+        $response = $this->get($endpoint .'?dateTo='.now()->addDays(5)); // case 4
+
+        $response->assertJsonCount(2, 'data'); // assert we have 2 records.
+        $response->assertJsonFragment(['id'=> $earlierTour->id]);  // assert the earlier tour is there because its have the starting_date from now() and its within the filter.  
+        $response->assertJsonFragment(['id'=> $laterTour->id]);  // assert the later tour there because its have the starting_date from now(+2 days) and its within the filter.
+        //-----------------------------------------------------------------------------
+        $response = $this->get($endpoint .'?dateTo='.now()->addDay()); // case 5
+
+        $response->assertJsonCount(1, 'data'); // assert we have only 1 record.
+        $response->assertJsonFragment(['id'=> $earlierTour->id]);  // assert the earlier tour is there because its have the starting_date from now() and its within the filter.  
+        $response->assertJsonMissing(['id'=> $laterTour->id]);  // assert the later tour is Not there because its have the starting_date from now(+2 days) and its out of the filter range.
+        //-----------------------------------------------------------------------------
+        $response = $this->get($endpoint .'?dateTo='.now()->subDay()); // case 6
+
+        $response->assertJsonCount(0, 'data'); // assert we have No records at all because its out of the filter range.
+        //-----------------------------------------------------------------------------
+        $response = $this->get($endpoint .'?dateFrom='.now()->addDay().'&dateTo='.now()->addDays(5)); // case 7
+
+        $response->assertJsonCount(1, 'data'); // assert we have only 1 record.
+        $response->assertJsonMissing(['id'=> $earlierTour->id]);  // assert the earlier tour is Not there because its have the starting_date from now() and its out of the filter range.  
+        $response->assertJsonFragment(['id'=> $laterTour->id]);  // assert the later tour there because its have the starting_date from now(+2 days) and its within the filter.
+    }
 }
