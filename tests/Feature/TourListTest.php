@@ -76,4 +76,37 @@ class TourListTest extends TestCase
         $response->assertJsonPath('data.0.id', $earlierTour->id); // assert that the earlierTour(that have index 0) will appears first and before the laterTour(that have index 1)
         $response->assertJsonPath('data.1.id', $laterTour->id);  // assert that the laterTour(that have index 1) will appears in the last and after the earlierTour(that have index 0) 
     }
+
+    public function test_tours_list_sorts_by_price_then_by_date_correctly(): void
+    {
+        $travel = Travel::factory()->create(); // create 1 travel.
+
+        $expensiveTour = Tour::factory()->create([ // create 1 tour have expensive price = 200.
+            'travel_id' => $travel->id,
+            'price' => 200,
+        ]);
+
+        $cheapLaterTour = Tour::factory()->create([ // create 1 tour have cheap price and Later starting_date.
+            'travel_id' => $travel->id,
+            'price'=> 100,
+            'starting_date' => now()->addDays(2),
+            'ending_date' => now()->addDays(3),
+        ]);
+
+        $cheapEarlierTour = Tour::factory()->create([ // create 1 tour have cheap price and early starting_date.
+            'travel_id' => $travel->id,
+            'price'=> 100,
+            'starting_date' => now(),
+            'ending_date' => now()->addDays(1),
+        ]);
+
+        $response = $this->get('/api/v1/travels/'. $travel->slug .'/tours?sortBy=price&sortOrder=asc'); // navigate to the tours route with sortBy and sortOrder parameters.
+
+        $response->assertStatus(200); // assert getting data from the route (the route is exist and correct).
+
+        // The sortBy is 'price' and the sortOrder is 'asc' then we have the fix orderBy that is 'starting_date', so the results must be:
+        $response->assertJsonPath('data.0.id', $cheapEarlierTour->id); // first cheaper price and the earlier date.
+        $response->assertJsonPath('data.1.id', $cheapLaterTour->id);  // secondly the cheaper but have later date.  
+        $response->assertJsonPath('data.2.id', $expensiveTour->id);  // in the last the most expensive in price.
+    }
 }
