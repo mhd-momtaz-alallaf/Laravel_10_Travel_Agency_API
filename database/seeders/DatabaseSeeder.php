@@ -3,6 +3,9 @@
 namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+
+use App\Models\Tour;
+use App\Models\Travel;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -18,5 +21,14 @@ class DatabaseSeeder extends Seeder
         //     'name' => 'Test User',
         //     'email' => 'test@example.com',
         // ]);
+
+        Travel::factory(100)->create();
+            
+        foreach (Travel::all() as $travel) {
+            Tour::factory(rand(10, 80))->create([
+                'travel_id' => $travel->id,
+                ]
+            );
+        }
     }
 }
