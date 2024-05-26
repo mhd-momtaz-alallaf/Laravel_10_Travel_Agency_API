@@ -22,6 +22,8 @@ class DatabaseSeeder extends Seeder
         //     'email' => 'test@example.com',
         // ]);
 
+        $this->call(RoleSeeder::class);
+        
         Travel::factory(100)->create();
             
         foreach (Travel::all() as $travel) {
