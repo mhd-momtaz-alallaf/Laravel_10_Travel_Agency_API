@@ -32,4 +32,28 @@ class AdminTravelTest extends TestCase
 
         $response->assertStatus(403); // assert getting forbidden (unauthorized) code.
     }
+
+    public function test_admin_creates_travel_successfully_with_valid_data(): void
+    {
+        $this->seed(RoleSeeder::class); // to seed the roles into the testing database.
+
+        $user = User::factory()->create(); // create new user.
+
+        $user->roles()->attach(Role::where('name' ,'admin')->value('id')); // attach the admin role id to the created user.
+        
+        $response = $this->actingAs($user)->postJson('/api/v1/admin/travels',[ // login into the system as the created $user (the admin) and navigate to admin travels route.
+            'name'=> 'Travel Name', //Case 1: passing only the travel name, skipping the rest of the required fields.
+        ]); 
+
+        $response->assertStatus(422); // assert getting validation error (422) code.
+
+        $response = $this->actingAs($user)->postJson('/api/v1/admin/travels',[ // login into the system as the created $user (the admin) and navigate to admin travels route.
+            'name'=> 'Travel Name', //Case 2: passing All required fields.
+            'is_public' => 1,
+            'description' => 'travel description',
+            'number_of_days' => 5,
+        ]); 
+
+        $response->assertStatus(201); // assert getting created successfully (201) code.
+    }
 }
