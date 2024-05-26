@@ -46,7 +46,7 @@ class AdminTravelTest extends TestCase
         ]); 
 
         $response->assertStatus(422); // assert getting validation error (422) code.
-
+        //----------------------------------------------------------------------------
         $response = $this->actingAs($user)->postJson('/api/v1/admin/travels',[ // login into the system as the created $user (the admin) and navigate to admin travels route.
             'name'=> 'Travel Name', //Case 2: passing All required fields.
             'is_public' => 1,
@@ -55,5 +55,9 @@ class AdminTravelTest extends TestCase
         ]); 
 
         $response->assertStatus(201); // assert getting created successfully (201) code.
+        //----------------------------------------------------------------------------
+        $response = $this->get('/api/v1/travels'); //Case 3: get the list of all the travels.
+
+        $response->assertJsonFragment(['name' => 'Travel Name']); // assert that the name of the newly created travel is there.
     }
 }
