@@ -25,7 +25,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::get('/travels',[TravelController::class, 'index']); // to get the list of public travels.
 Route::get('/travels/{travel:slug}/tours',[TourController::class,'index']); // to get the list of a travel tours, travel:slug means the search id of the travel will be the slug (/travels/first-travel/tours).
 
-Route::prefix('/admin')->middleware('auth:sanctum')->group(function () { // after adding this prefix, the routes of this group will be api/v1/admin/...
+Route::prefix('/admin')->middleware(['auth:sanctum', 'role:admin'])->group(function () { // after adding this prefix, the routes of this group will be api/v1/admin/..., 'role:admin' is the role parameter inside RoleMiddleware.
     Route::post('/travels', [AdminTravelController::class, 'store']); // to post (create) new travel.
 });
 
