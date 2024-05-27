@@ -26,9 +26,14 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::get('/travels',[TravelController::class, 'index']); // to get the list of public travels.
 Route::get('/travels/{travel:slug}/tours',[TourController::class,'index']); // to get the list of a travel tours, travel:slug means the search id of the travel will be the slug (/travels/first-travel/tours).
 
-Route::prefix('/admin')->middleware(['auth:sanctum', 'role:admin'])->group(function () { // after adding this prefix, the routes of this group will be api/v1/admin/..., 'role:admin' is the role parameter inside RoleMiddleware.
-    Route::post('/travels', [AdminTravelController::class, 'store']); // to post (create) new travel.
-    Route::post('/travels/{travel}/tours', [AdminTourController::class, 'store']); // to create new travel tour.
+Route::prefix('/admin')->middleware('auth:sanctum')->group(function () { // after adding this prefix, the routes of this group will be api/v1/admin/..., Authenticated users only can access this route group.
+    
+    Route::middleware('role:admin')->group(function () { // 'role:admin' is the role parameter inside RoleMiddleware.
+        Route::post('/travels', [AdminTravelController::class, 'store']); // to post (create) new travel.
+        Route::post('/travels/{travel}/tours', [AdminTourController::class, 'store']); // to create new travel tour.
+    });
+
+    Route::put('/travels/{travel}', [AdminTravelController::class,'update'])->middleware('role:editor,admin'); // the admin or the editor can access this route to update a travel.
 });
 
 Route::post('/login', LoginController::class); // The login route, we don't have to call the method by name because its a __invoke method inside the LoginController.
