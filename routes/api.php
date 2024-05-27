@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Admin\TourController as AdminTourController;
 use App\Http\Controllers\Api\V1\Admin\TravelController as AdminTravelController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
 use App\Http\Controllers\Api\V1\TourController;
@@ -27,6 +28,7 @@ Route::get('/travels/{travel:slug}/tours',[TourController::class,'index']); // t
 
 Route::prefix('/admin')->middleware(['auth:sanctum', 'role:admin'])->group(function () { // after adding this prefix, the routes of this group will be api/v1/admin/..., 'role:admin' is the role parameter inside RoleMiddleware.
     Route::post('/travels', [AdminTravelController::class, 'store']); // to post (create) new travel.
+    Route::post('/travels/{travel}/tours', [AdminTourController::class, 'store']); // to create new travel tour.
 });
 
 Route::post('/login', LoginController::class); // The login route, we don't have to call the method by name because its a __invoke method inside the LoginController.
