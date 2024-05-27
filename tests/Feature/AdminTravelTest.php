@@ -91,4 +91,34 @@ class AdminTravelTest extends TestCase
 
         $response->assertJsonFragment(['name' => 'Updated Travel Name']); // assert that the name of the newly created travel is there.
     }
+
+    public function test_editor_updates_travel_successfully_with_valid_data(): void
+    {
+        $this->seed(RoleSeeder::class); // to seed the roles into the testing database.
+
+        $user = User::factory()->create(); // create new user.
+
+        $user->roles()->attach(Role::where('name' ,'editor')->value('id')); // attach the editor role id to the created user.
+      
+        $travel = Travel::factory()->create(); // create new travel.
+
+        $response = $this->actingAs($user)->putJson('/api/v1/admin/travels/'.$travel->id,[ // login into the system as the created $user (the editor) and navigate to update travels route.
+            'name'=> 'Travel Name', //Case 1: passing only the travel name, skipping the rest of the required fields.
+        ]); 
+
+        $response->assertStatus(422); // assert getting validation error (422) code.
+        //----------------------------------------------------------------------------
+        $response = $this->actingAs($user)->putJson('/api/v1/admin/travels/'.$travel->id,[ // login into the system as the created $user (the editor) and navigate to update travels route.
+            'name'=> 'Updated Travel Name', //Case 2: passing All required fields.
+            'is_public' => 1,
+            'description' => 'updated description',
+            'number_of_days' => 5,
+        ]); 
+
+        $response->assertStatus(200); // assert getting Ok 200 code.
+        //----------------------------------------------------------------------------
+        $response = $this->get('/api/v1/travels'); //Case 3: get the list of all the travels.
+
+        $response->assertJsonFragment(['name' => 'Updated Travel Name']); // assert that the name of the newly created travel is there.
+    }
 }
